@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>김위진 소개팅 페이지</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Three.js 배경 캔버스 -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- 메인 카드 -->
+  <main class="main">
+    <div class="scene" id="scene">
+      <div class="card" id="card">
+
+        <!-- 카드 테두리 글로우 -->
+        <div class="card-glow"></div>
+
+        <!-- 사진 섹션 -->
+        <div class="photo-section">
+          <div class="photo-frame">
+            <img src="images/profile.png" alt="김위진" class="profile-photo" />
+            <div class="photo-ring"></div>
+            <div class="photo-ring ring2"></div>
+          </div>
+          <div class="status-pill">
+            <span class="status-dot"></span>
+            모집중
+          </div>
+        </div>
+
+        <!-- 정보 섹션 -->
+        <div class="info-section">
+          <div class="name-row">
+            <h1 class="name">김위진</h1>
+            <span class="age-badge">고등학생</span>
+          </div>
+          <p class="description">평범하고 따뜻한 사람 🤍</p>
+
+          <div class="divider"></div>
+
+          <div class="ideal-area">
+            <p class="section-label">이상형</p>
+            <div class="chips">
+              <div class="chip">여성 ♀</div>
+              <div class="chip">160cm 이하</div>
+              <div class="chip">55kg 이하</div>
+              <div class="chip">B컵 이상</div>
+            </div>
+          </div>
+
+          <button class="cta-btn" onclick="handleCTA()">
+            💌 &nbsp;지원하기
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- 알림 모달 -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-emoji">💌</div>
+      <h2>지원 완료!</h2>
+      <p>위진이에게 마음이 전달됐어요 ☺️</p>
+      <button onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

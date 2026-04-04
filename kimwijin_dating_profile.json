@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "name": "김위진",
+    "gender": "male",
+    "looking_for": "girlfriend",
+    "description": "평범하고 따뜻한 고등학생"
+  },
+  "ideal_type": {
+    "gender": "female",
+    "height": {
+      "max_cm": 160,
+      "unit": "cm"
+    },
+    "weight": {
+      "max_kg": 55,
+      "unit": "kg"
+    },
+    "cup_size": {
+      "minimum": "B",
+      "note": "B컵 이상"
+    }
+  },
+  "website": {
+    "title": "김위진 소개팅 페이지",
+    "purpose": "이상형을 찾아드립니다",
+    "status": "모집중"
+  }
+}
