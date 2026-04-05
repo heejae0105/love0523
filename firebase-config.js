@@ -8,5 +8,6 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const db   = firebase.firestore();
 const auth = firebase.auth();
+// Firestore는 SDK가 로드된 페이지에서만 초기화
+const db = typeof firebase.firestore === 'function' ? firebase.firestore() : null;
