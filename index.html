@@ -195,20 +195,31 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="firebase-config.js"></script>
   <script src="profiles.js"></script>
   <script>
-    const provider = new firebase.auth.GoogleAuthProvider();
+    // Firebase 직접 초기화 (firebase-config.js 의존 제거)
+    const _cfg = {
+      apiKey:            "AIzaSyBwR21PEU_jhb8oLJKXgPIzcvGm8I9_wVs",
+      authDomain:        "love0523-33af7.firebaseapp.com",
+      projectId:         "love0523-33af7",
+      storageBucket:     "love0523-33af7.firebasestorage.app",
+      messagingSenderId: "723908766892",
+      appId:             "1:723908766892:web:8947621736a7a3a75d4309"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(_cfg);
+    const _auth     = firebase.auth();
+    const _provider = new firebase.auth.GoogleAuthProvider();
 
-    const GOOGLE_BTN_HTML = document.getElementById('google-login-btn').innerHTML;
     const errEl = document.createElement('p');
     errEl.style.cssText = 'font-size:.78rem;color:#ff6b8a;margin-top:.8rem;min-height:1rem;';
     document.querySelector('.login-card').appendChild(errEl);
 
-    // 리다이렉트로 돌아왔을 때 결과 처리
-    auth.getRedirectResult()
-      .then(result => { if (result && result.user) errEl.textContent = ''; })
-      .catch(e => { errEl.textContent = '로그인 실패: ' + (e.message || '다시 시도해주세요'); });
+    // 리다이렉트 복귀 처리
+    _auth.getRedirectResult()
+      .then(r => { if (r && r.user) errEl.textContent = ''; })
+      .catch(e => { errEl.textContent = '오류: ' + (e.message || '다시 시도해주세요'); });
+
+    const GOOGLE_BTN_HTML = document.getElementById('google-login-btn').innerHTML;
 
     async function signInWithGoogle() {
       const btn = document.getElementById('google-login-btn');
@@ -217,14 +228,12 @@
       errEl.textContent = '';
 
       try {
-        // 팝업 방식 먼저 시도 (빠름)
-        await auth.signInWithPopup(provider);
+        await _auth.signInWithPopup(_provider);
       } catch (e) {
         if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
-          // 팝업 차단 → 리다이렉트로 자동 전환
           errEl.textContent = '잠시 후 Google 로그인 페이지로 이동해요...';
           try {
-            await auth.signInWithRedirect(provider);
+            await _auth.signInWithRedirect(_provider);
           } catch (e2) {
             errEl.textContent = '오류: ' + (e2.message || '다시 시도해주세요');
             btn.disabled = false;
@@ -239,10 +248,10 @@
     }
 
     function signOut() {
-      auth.signOut();
+      _auth.signOut();
     }
 
-    auth.onAuthStateChanged(user => {
+    _auth.onAuthStateChanged(user => {
       const overlay = document.getElementById('login-overlay');
       const app     = document.getElementById('app');
       if (user) {
