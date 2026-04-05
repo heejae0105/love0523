@@ -11,17 +11,17 @@ const PROFILES = [
     description: '평범하고 따뜻한 사람 🤍',
     instagram: 'nxptune0',
     photo: 'images/profile.png',
-    idealType: ['여성 ♀', '160cm 이하', '55kg 이하', 'B컵 이상'],
+    idealType: ['여성 ♀', '160cm 이하', '55kg 이하'],
     status: '모집중'
   },
   {
     id: 'youngwoong',
     name: '조영웅',
     school: '대성고등학교',
-    description: '181 73 20 💪',
+    description: '181 73 💪',
     instagram: 'h._r1o',
     photo: 'images/youngwoong.png',
-    idealType: ['여성 ♀', '육감적인'],
+    idealType: ['여성 ♀', '단발', '청순'],
     status: '모집중'
   }
 ];
