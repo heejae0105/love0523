@@ -347,18 +347,18 @@
       if (gallery.children.length > 0) return;
 
       const uid = _auth.currentUser.uid;
-
-      // 좋아요 수 + 현재 유저 좋아요 여부 병렬 로드
-      const [likeSnap, userLikeSnap] = await Promise.all([
-        _db.collection('likes').get(),
-        _db.collection('userLikes').where('uid', '==', uid).get()
-      ]);
-
       const likeCounts = {};
-      likeSnap.forEach(doc => { likeCounts[doc.id] = doc.data().count || 0; });
-
       const userLiked = new Set();
-      userLikeSnap.forEach(doc => { userLiked.add(doc.data().profileId); });
+
+      // 좋아요 수 + 현재 유저 좋아요 여부 로드 (실패해도 프로필은 표시)
+      try {
+        const [likeSnap, userLikeSnap] = await Promise.all([
+          _db.collection('likes').get(),
+          _db.collection('userLikes').where('uid', '==', uid).get()
+        ]);
+        likeSnap.forEach(doc => { likeCounts[doc.id] = doc.data().count || 0; });
+        userLikeSnap.forEach(doc => { userLiked.add(doc.data().profileId); });
+      } catch(e) { /* 실패해도 프로필은 0/미좋아요 상태로 표시 */ }
 
       PROFILES.forEach(p => {
         const count = likeCounts[p.id] || 0;
