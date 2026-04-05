@@ -176,45 +176,7 @@
     .heart-icon { font-size: 1rem; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); display: inline-block; }
     .heart-btn.pop .heart-icon { transform: scale(1.6); }
 
-    /* ── 3D 떠다니는 오브젝트 ── */
-    .float-obj {
-      position: fixed; pointer-events: none; z-index: 0;
-      filter: drop-shadow(0 20px 50px rgba(255,80,150,0.5));
-    }
-    .float-ig {
-      width: 80px; top: 15%; left: 5%;
-      animation: floatIG 9s ease-in-out infinite;
-    }
-    .float-creature {
-      width: 90px; bottom: 18%; right: 5%;
-      animation: floatCreature 11s ease-in-out infinite;
-    }
-    .float-ig2 {
-      width: 50px; bottom: 25%; left: 8%;
-      animation: floatIG 13s ease-in-out infinite reverse;
-      opacity: 0.6;
-    }
-    .float-creature2 {
-      width: 60px; top: 12%; right: 8%;
-      animation: floatCreature 8s ease-in-out infinite reverse;
-      opacity: 0.7;
-    }
-    @keyframes floatIG {
-      0%   { transform: translateY(0px) rotateY(0deg) rotateX(8deg) rotateZ(-5deg); }
-      25%  { transform: translateY(-28px) rotateY(90deg) rotateX(-5deg) rotateZ(3deg); }
-      50%  { transform: translateY(-12px) rotateY(180deg) rotateX(10deg) rotateZ(-8deg); }
-      75%  { transform: translateY(-38px) rotateY(270deg) rotateX(-8deg) rotateZ(5deg); }
-      100% { transform: translateY(0px) rotateY(360deg) rotateX(8deg) rotateZ(-5deg); }
-    }
-    @keyframes floatCreature {
-      0%   { transform: translateY(0px) rotateY(15deg) rotateX(5deg) rotateZ(3deg) scale(1); }
-      30%  { transform: translateY(-35px) rotateY(-10deg) rotateX(-8deg) rotateZ(-5deg) scale(1.05); }
-      60%  { transform: translateY(-18px) rotateY(20deg) rotateX(12deg) rotateZ(6deg) scale(0.97); }
-      80%  { transform: translateY(-42px) rotateY(-15deg) rotateX(-5deg) rotateZ(-3deg) scale(1.03); }
-      100% { transform: translateY(0px) rotateY(15deg) rotateX(5deg) rotateZ(3deg) scale(1); }
-    }
-
-    @media (max-width: 480px) {
+@media (max-width: 480px) {
       .app-header { padding: 1rem; }
       .gallery { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; padding: 0 1rem 3rem; }
       .float-ig { width: 55px; }
@@ -235,11 +197,6 @@
   <div class="bg-blob blob1"></div>
   <div class="bg-blob blob2"></div>
 
-  <!-- 3D 떠다니는 오브젝트 -->
-  <img src="images/ig-float.png" class="float-obj float-ig" alt="" />
-  <img src="images/creature.png" class="float-obj float-creature" alt="" />
-  <img src="images/ig-float.png" class="float-obj float-ig2" alt="" />
-  <img src="images/creature.png" class="float-obj float-creature2" alt="" />
 
   <!-- ── 로그인 오버레이 ── -->
   <div id="login-overlay">
