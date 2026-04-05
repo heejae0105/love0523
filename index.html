@@ -8,160 +8,253 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: #080818; min-height: 100vh; color: #fff; overflow-x: hidden; }
 
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
+    /* ── 배경 블롭 ── */
+    .bg-blob {
+      position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0;
+    }
+    .blob1 { width: 500px; height: 500px; background: rgba(255,100,150,0.07); top: -100px; left: -100px; animation: blobMove 8s ease-in-out infinite; }
+    .blob2 { width: 600px; height: 600px; background: rgba(150,100,255,0.07); bottom: -150px; right: -150px; animation: blobMove 10s ease-in-out infinite reverse; }
+    @keyframes blobMove { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-20px) scale(1.05)} }
+
+    /* ── 로그인 오버레이 ── */
+    #login-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
       background: #080818;
-      min-height: 100vh;
-      color: #fff;
+      transition: opacity 0.5s ease;
     }
+    #login-overlay.hidden { opacity: 0; pointer-events: none; }
 
-    /* 배경 그라디언트 */
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background:
-        radial-gradient(ellipse at 20% 20%, rgba(255,100,150,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 80%, rgba(150,100,255,0.08) 0%, transparent 60%);
-    }
-
-    /* 헤더 */
-    header {
-      position: relative; z-index: 1;
-      text-align: center;
-      padding: 3.5rem 1rem 1.5rem;
-    }
-    header h1 {
-      font-size: 2.8rem; font-weight: 900;
-      background: linear-gradient(135deg, #ff6496, #c064ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: -0.03em;
-      margin-bottom: 0.4rem;
-    }
-    header p {
-      font-size: 0.92rem; color: rgba(255,255,255,0.4); font-weight: 300;
-    }
-
-    /* 갤러리 그리드 */
-    .gallery {
-      position: relative; z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1.2rem;
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 0 1.5rem 4rem;
-    }
-
-    /* 프로필 카드 */
-    .profile-card {
+    .login-card {
+      position: relative;
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 1.5rem 1rem;
+      border-radius: 28px;
+      padding: 3rem 2.5rem;
+      width: min(380px, 90vw);
       text-align: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+      animation: cardIn 0.7s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes cardIn { from{opacity:0;transform:translateY(40px) scale(.95)} to{opacity:1;transform:none} }
+
+    .login-emoji { font-size: 3.5rem; margin-bottom: 0.5rem; display: block; animation: heartbeat 2s ease-in-out infinite; }
+    @keyframes heartbeat { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+
+    .login-card h1 {
+      font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ff6496, #c064ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .login-card .tagline {
+      font-size: 0.88rem; color: rgba(255,255,255,0.45); font-weight: 300;
+      line-height: 1.6; margin-bottom: 2rem;
+    }
+
+    .google-btn {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: #fff; color: #1f1f1f;
+      border: none; border-radius: 14px;
+      padding: 0.9rem 1.2rem;
+      font-size: 0.95rem; font-weight: 600;
+      font-family: 'Noto Sans KR', sans-serif;
       cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      display: block;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: all 0.25s ease;
+    }
+    .google-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    .google-btn:active { transform: translateY(0); }
+    .google-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .login-notice {
+      font-size: 0.72rem; color: rgba(255,255,255,0.25);
+      margin-top: 1.2rem; line-height: 1.5;
+    }
+
+    /* ── 메인 앱 ── */
+    #app { display: none; position: relative; z-index: 1; min-height: 100vh; }
+
+    /* ── 헤더 ── */
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .app-header h1 {
+      font-size: 1.3rem; font-weight: 900;
+      background: linear-gradient(135deg, #ff6496, #c064ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .user-info { display: flex; align-items: center; gap: 0.7rem; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255,100,150,0.5); }
+    .user-name { font-size: 0.82rem; color: rgba(255,255,255,0.6); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .logout-btn {
+      font-size: 0.75rem; color: rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px; padding: 0.28rem 0.8rem;
+      cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { background: rgba(255,100,150,0.15); color: #ff8ab4; border-color: rgba(255,100,150,0.3); }
+
+    /* ── 갤러리 타이틀 ── */
+    .gallery-header { text-align: center; padding: 2.5rem 1rem 0.5rem; }
+    .gallery-header p { font-size: 0.88rem; color: rgba(255,255,255,0.35); font-weight: 300; }
+
+    /* ── 갤러리 그리드 ── */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.2rem;
+      max-width: 860px; margin: 2rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+    .profile-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 20px; padding: 1.5rem 1rem;
+      text-align: center; cursor: pointer;
+      text-decoration: none; color: inherit; display: block;
       transition: all 0.3s ease;
       animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both;
     }
-    .profile-card:nth-child(2) { animation-delay: 0.1s; }
-    .profile-card:nth-child(3) { animation-delay: 0.2s; }
-    .profile-card:nth-child(4) { animation-delay: 0.3s; }
+    .profile-card:nth-child(2) { animation-delay: 0.08s; }
+    .profile-card:nth-child(3) { animation-delay: 0.16s; }
+    .profile-card:nth-child(4) { animation-delay: 0.24s; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+    .profile-card:hover { transform: translateY(-6px); border-color: rgba(255,100,150,0.4); box-shadow: 0 20px 40px rgba(255,100,150,0.12); }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .card-photo-wrap { position: relative; width: 90px; height: 90px; margin: 0 auto 0.9rem; }
+    .card-photo { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; object-position: center 30%; border: 2px solid rgba(255,100,150,0.4); }
+    .card-online { position: absolute; bottom: 2px; right: 2px; width: 13px; height: 13px; border-radius: 50%; background: #ff6496; border: 2px solid #080818; box-shadow: 0 0 8px #ff6496; animation: pulse 1.8s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-    .profile-card:hover {
-      transform: translateY(-6px);
-      border-color: rgba(255,100,150,0.4);
-      background: rgba(255,255,255,0.08);
-      box-shadow: 0 20px 40px rgba(255,100,150,0.15);
-    }
-
-    .card-photo-wrap {
-      position: relative;
-      width: 100px; height: 100px;
-      margin: 0 auto 1rem;
-    }
-    .card-photo {
-      width: 100px; height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      object-position: center 30%;
-      border: 2px solid rgba(255,100,150,0.4);
-    }
-    .card-status {
-      position: absolute;
-      bottom: 2px; right: 2px;
-      background: #ff6496;
-      border: 2px solid #080818;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #ff6496;
-      animation: dotPulse 1.8s ease-in-out infinite;
-    }
-    @keyframes dotPulse {
-      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
-    }
-
-    .card-name {
-      font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem;
-    }
-    .card-school {
-      font-size: 0.72rem; color: rgba(255,255,255,0.4); margin-bottom: 0.6rem;
-    }
-    .card-desc {
-      font-size: 0.8rem; color: rgba(255,255,255,0.55);
-      line-height: 1.4; margin-bottom: 0.9rem;
-    }
+    .card-name { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .card-school { font-size: 0.7rem; color: rgba(255,255,255,0.35); margin-bottom: 0.5rem; }
+    .card-desc { font-size: 0.78rem; color: rgba(255,255,255,0.5); line-height: 1.4; margin-bottom: 0.9rem; }
     .card-btn {
-      display: inline-block;
-      padding: 0.4rem 1.2rem;
+      display: inline-block; padding: 0.38rem 1.1rem;
       background: linear-gradient(135deg, #ff6496, #c064ff);
-      border-radius: 999px;
-      font-size: 0.78rem; font-weight: 600; color: #fff;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: #fff;
     }
 
     @media (max-width: 480px) {
-      header h1 { font-size: 2rem; }
+      .app-header { padding: 1rem; }
       .gallery { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; padding: 0 1rem 3rem; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>소개팅 💘</h1>
-    <p>마음에 드는 사람을 골라봐요</p>
-  </header>
 
-  <div class="gallery" id="gallery"></div>
+  <!-- 배경 블롭 -->
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
 
+  <!-- ── 로그인 오버레이 ── -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <span class="login-emoji">💘</span>
+      <h1>소개팅</h1>
+      <p class="tagline">마음에 드는 사람을 찾아봐요<br/>Google 계정으로 시작하세요</p>
+      <button class="google-btn" id="google-login-btn" onclick="signInWithGoogle()">
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Google로 계속하기
+      </button>
+      <p class="login-notice">로그인 정보는 소개팅 서비스 외 목적으로 사용되지 않아요</p>
+    </div>
+  </div>
+
+  <!-- ── 메인 앱 ── -->
+  <div id="app">
+    <header class="app-header">
+      <h1>소개팅 💘</h1>
+      <div class="user-info">
+        <img class="user-avatar" id="user-avatar" src="" alt="" />
+        <span class="user-name" id="user-name"></span>
+        <button class="logout-btn" onclick="signOut()">로그아웃</button>
+      </div>
+    </header>
+
+    <div class="gallery-header">
+      <p>마음에 드는 사람을 골라봐요</p>
+    </div>
+
+    <div class="gallery" id="gallery"></div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <script src="profiles.js"></script>
   <script>
-    const gallery = document.getElementById('gallery');
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-    PROFILES.forEach(p => {
-      const a = document.createElement('a');
-      a.className = 'profile-card';
-      a.href = `profile.html?id=${p.id}`;
-      a.innerHTML = `
-        <div class="card-photo-wrap">
-          <img class="card-photo" src="${p.photo}" alt="${p.name}" />
-          <div class="card-status"></div>
-        </div>
-        <div class="card-name">${p.name}</div>
-        <div class="card-school">${p.school}</div>
-        <div class="card-desc">${p.description}</div>
-        <div class="card-btn">프로필 보기 →</div>
-      `;
-      gallery.appendChild(a);
+    async function signInWithGoogle() {
+      const btn = document.getElementById('google-login-btn');
+      btn.disabled = true;
+      btn.textContent = '로그인 중...';
+      try {
+        await auth.signInWithPopup(provider);
+      } catch(e) {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Google로 계속하기`;
+      }
+    }
+
+    function signOut() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged(user => {
+      const overlay = document.getElementById('login-overlay');
+      const app     = document.getElementById('app');
+      if (user) {
+        // 로그인됨
+        overlay.classList.add('hidden');
+        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        app.style.display = 'block';
+        document.getElementById('user-avatar').src = user.photoURL || '';
+        document.getElementById('user-name').textContent = user.displayName || user.email;
+        buildGallery();
+      } else {
+        // 로그아웃
+        overlay.style.display = 'flex';
+        overlay.classList.remove('hidden');
+        app.style.display = 'none';
+      }
     });
+
+    function buildGallery() {
+      const gallery = document.getElementById('gallery');
+      if (gallery.children.length > 0) return; // 중복 빌드 방지
+      PROFILES.forEach(p => {
+        const a = document.createElement('a');
+        a.className = 'profile-card';
+        a.href = `profile.html?id=${p.id}`;
+        a.innerHTML = `
+          <div class="card-photo-wrap">
+            <img class="card-photo" src="${p.photo}" alt="${p.name}" />
+            <div class="card-online"></div>
+          </div>
+          <div class="card-name">${p.name}</div>
+          <div class="card-school">${p.school}</div>
+          <div class="card-desc">${p.description}</div>
+          <div class="card-btn">프로필 보기 →</div>
+        `;
+        gallery.appendChild(a);
+      });
+    }
   </script>
 </body>
 </html>

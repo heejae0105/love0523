@@ -93,6 +93,13 @@
   <script src="profiles.js"></script>
 
   <script>
+  // ── 로그인 체크 ─────────────────────────────────────
+  let currentUser = null;
+  auth.onAuthStateChanged(user => {
+    if (!user) { location.href = 'index.html'; return; }
+    currentUser = user;
+  });
+
   // ── 프로필 초기화 ───────────────────────────────────
   const profileId = new URLSearchParams(location.search).get('id');
   const profile   = (typeof PROFILES !== 'undefined') && PROFILES.find(p => p.id === profileId);
@@ -147,11 +154,14 @@
 
     try {
       await db.collection('submissions').add({
-        profileId:   profile.id,
-        profileName: profile.name,
-        instagramId: raw,
-        timestamp:   firebase.firestore.FieldValue.serverTimestamp(),
-        userAgent:   navigator.userAgent
+        profileId:    profile.id,
+        profileName:  profile.name,
+        instagramId:  raw,
+        googleEmail:  currentUser?.email  || '',
+        googleName:   currentUser?.displayName || '',
+        googlePhoto:  currentUser?.photoURL || '',
+        timestamp:    firebase.firestore.FieldValue.serverTimestamp(),
+        userAgent:    navigator.userAgent
       });
     } catch(e) { console.warn('Firebase 저장 실패:', e.message); }
 
