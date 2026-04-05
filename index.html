@@ -158,9 +158,68 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     #loading-screen p { font-size: 0.82rem; color: rgba(255,255,255,0.3); }
 
+    /* ── 하트 버튼 ── */
+    .heart-btn {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,100,150,0.2);
+      border-radius: 999px;
+      padding: 0.32rem 0.85rem;
+      font-size: 0.8rem; color: rgba(255,255,255,0.5);
+      cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+      transition: all 0.2s ease;
+      margin-top: 0.6rem;
+      position: relative; z-index: 2;
+    }
+    .heart-btn:hover { background: rgba(255,100,150,0.15); border-color: rgba(255,100,150,0.5); }
+    .heart-btn.liked { background: rgba(255,100,150,0.2); border-color: #ff6496; color: #ff8ab4; }
+    .heart-icon { font-size: 1rem; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); display: inline-block; }
+    .heart-btn.pop .heart-icon { transform: scale(1.6); }
+
+    /* ── 3D 떠다니는 오브젝트 ── */
+    .float-obj {
+      position: fixed; pointer-events: none; z-index: 0;
+      filter: drop-shadow(0 20px 50px rgba(255,80,150,0.5));
+    }
+    .float-ig {
+      width: 80px; top: 15%; left: 5%;
+      animation: floatIG 9s ease-in-out infinite;
+    }
+    .float-creature {
+      width: 90px; bottom: 18%; right: 5%;
+      animation: floatCreature 11s ease-in-out infinite;
+    }
+    .float-ig2 {
+      width: 50px; bottom: 25%; left: 8%;
+      animation: floatIG 13s ease-in-out infinite reverse;
+      opacity: 0.6;
+    }
+    .float-creature2 {
+      width: 60px; top: 12%; right: 8%;
+      animation: floatCreature 8s ease-in-out infinite reverse;
+      opacity: 0.7;
+    }
+    @keyframes floatIG {
+      0%   { transform: translateY(0px) rotateY(0deg) rotateX(8deg) rotateZ(-5deg); }
+      25%  { transform: translateY(-28px) rotateY(90deg) rotateX(-5deg) rotateZ(3deg); }
+      50%  { transform: translateY(-12px) rotateY(180deg) rotateX(10deg) rotateZ(-8deg); }
+      75%  { transform: translateY(-38px) rotateY(270deg) rotateX(-8deg) rotateZ(5deg); }
+      100% { transform: translateY(0px) rotateY(360deg) rotateX(8deg) rotateZ(-5deg); }
+    }
+    @keyframes floatCreature {
+      0%   { transform: translateY(0px) rotateY(15deg) rotateX(5deg) rotateZ(3deg) scale(1); }
+      30%  { transform: translateY(-35px) rotateY(-10deg) rotateX(-8deg) rotateZ(-5deg) scale(1.05); }
+      60%  { transform: translateY(-18px) rotateY(20deg) rotateX(12deg) rotateZ(6deg) scale(0.97); }
+      80%  { transform: translateY(-42px) rotateY(-15deg) rotateX(-5deg) rotateZ(-3deg) scale(1.03); }
+      100% { transform: translateY(0px) rotateY(15deg) rotateX(5deg) rotateZ(3deg) scale(1); }
+    }
+
     @media (max-width: 480px) {
       .app-header { padding: 1rem; }
       .gallery { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; padding: 0 1rem 3rem; }
+      .float-ig { width: 55px; }
+      .float-creature { width: 65px; }
+      .float-ig2, .float-creature2 { display: none; }
     }
   </style>
 </head>
@@ -175,6 +234,12 @@
   <!-- 배경 블롭 -->
   <div class="bg-blob blob1"></div>
   <div class="bg-blob blob2"></div>
+
+  <!-- 3D 떠다니는 오브젝트 -->
+  <img src="images/ig-float.png" class="float-obj float-ig" alt="" />
+  <img src="images/creature.png" class="float-obj float-creature" alt="" />
+  <img src="images/ig-float.png" class="float-obj float-ig2" alt="" />
+  <img src="images/creature.png" class="float-obj float-creature2" alt="" />
 
   <!-- ── 로그인 오버레이 ── -->
   <div id="login-overlay">
@@ -216,6 +281,7 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="profiles.js"></script>
   <script>
     // Firebase 직접 초기화 (firebase-config.js 의존 제거)
@@ -229,6 +295,7 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(_cfg);
     const _auth     = firebase.auth();
+    const _db       = firebase.firestore();
     const _provider = new firebase.auth.GoogleAuthProvider();
 
     const errEl = document.createElement('p');
@@ -292,10 +359,25 @@
       }
     });
 
-    function buildGallery() {
+    // 좋아요 상태 (localStorage)
+    const likedKey = id => `liked_${id}`;
+    const isLiked  = id => !!localStorage.getItem(likedKey(id));
+
+    async function buildGallery() {
       const gallery = document.getElementById('gallery');
-      if (gallery.children.length > 0) return; // 중복 빌드 방지
+      if (gallery.children.length > 0) return;
+
+      // Firestore에서 좋아요 수 불러오기
+      const likeCounts = {};
+      try {
+        const snap = await _db.collection('likes').get();
+        snap.forEach(doc => { likeCounts[doc.id] = doc.data().count || 0; });
+      } catch(e) { /* 실패해도 0으로 표시 */ }
+
       PROFILES.forEach(p => {
+        const count = likeCounts[p.id] || 0;
+        const liked = isLiked(p.id);
+
         const a = document.createElement('a');
         a.className = 'profile-card';
         a.href = `profile.html?id=${p.id}`;
@@ -308,8 +390,42 @@
           <div class="card-school">${p.school}</div>
           <div class="card-desc">${p.description}</div>
           <div class="card-btn">프로필 보기 →</div>
+          <button class="heart-btn${liked ? ' liked' : ''}" data-id="${p.id}">
+            <span class="heart-icon">${liked ? '❤️' : '🤍'}</span>
+            <span class="heart-count">${count}</span>
+          </button>
         `;
         gallery.appendChild(a);
+      });
+
+      // 하트 버튼 이벤트
+      gallery.querySelectorAll('.heart-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          e.preventDefault(); e.stopPropagation();
+          const id = btn.dataset.id;
+          const liked = isLiked(id);
+          const countEl = btn.querySelector('.heart-count');
+          const iconEl  = btn.querySelector('.heart-icon');
+          const delta = liked ? -1 : 1;
+          const newCount = Math.max(0, (parseInt(countEl.textContent) || 0) + delta);
+
+          if (liked) {
+            localStorage.removeItem(likedKey(id));
+            btn.classList.remove('liked');
+            iconEl.textContent = '🤍';
+          } else {
+            localStorage.setItem(likedKey(id), '1');
+            btn.classList.add('liked');
+            iconEl.textContent = '❤️';
+            btn.classList.add('pop');
+            setTimeout(() => btn.classList.remove('pop'), 400);
+          }
+          countEl.textContent = newCount;
+
+          try {
+            await _db.collection('likes').doc(id).set({ count: newCount }, { merge: true });
+          } catch(e) { /* 저장 실패 무시 */ }
+        });
       });
     }
   </script>
