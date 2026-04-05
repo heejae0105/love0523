@@ -235,7 +235,17 @@
       document.getElementById('table-body').innerHTML = '<div class="loading">불러오는 중...</div>';
       try {
         const snap = await db.collection('submissions').orderBy('timestamp', 'desc').get();
-        allData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // 중복 제거: profileId + instagramId 조합이 같으면 가장 최신 것만 유지
+        const seen = new Set();
+        allData = raw.filter(d => {
+          const key = `${d.profileId || ''}__${d.instagramId}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
         renderTable(allData);
         updateStats(allData);
       } catch (e) {
@@ -263,6 +273,7 @@
               @${d.instagramId}
             </a>
           </td>
+          <td style="color:rgba(255,255,255,0.5);font-size:0.8rem;">${d.profileName || d.profileId || '-'}</td>
           <td>${fmtDate(d.timestamp)}</td>
         </tr>
       `).join('');
@@ -272,6 +283,7 @@
             <tr>
               <th>#</th>
               <th>인스타그램 ID</th>
+              <th>지원 대상</th>
               <th>지원 시각</th>
             </tr>
           </thead>
