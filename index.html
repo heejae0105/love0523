@@ -13,8 +13,14 @@
     /* ── Spline 3D 배경 ── */
     .spline-bg {
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      overflow: hidden;
     }
-    spline-viewer { width: 100%; height: 100%; }
+    spline-viewer {
+      position: absolute;
+      top: -5px; left: -5px;
+      width: calc(100% + 10px);
+      height: calc(100% + 80px); /* 워터마크 아래로 밀어서 overflow hidden으로 잘리게 */
+    }
 
     /* 가독성을 위한 핑크빛 오버레이 */
     .bg-overlay {
@@ -25,14 +31,6 @@
         rgba(160,40,120,0.15) 40%,
         rgba(80,20,100,0.22) 100%
       );
-    }
-
-    /* Spline 워터마크 덮기 */
-    .watermark-cover {
-      position: fixed; bottom: 0; right: 0;
-      width: 200px; height: 55px; z-index: 10;
-      pointer-events: none;
-      background: linear-gradient(135deg, transparent 0%, rgba(210,130,170,1) 55%);
     }
 
     /* ── 로그인 오버레이 ── */
@@ -125,7 +123,7 @@
 
     /* ── 갤러리 타이틀 ── */
     .gallery-header { text-align: center; padding: 2.5rem 1rem 0.5rem; }
-    .gallery-header p { font-size: 0.88rem; color: rgba(255,255,255,0.35); font-weight: 300; }
+    .gallery-header p { font-size: 0.92rem; color: #fff; font-weight: 500; text-shadow: 0 1px 12px rgba(120,0,80,0.8), 0 0 24px rgba(0,0,0,0.5); letter-spacing: 0.02em; }
 
     /* ── 갤러리 그리드 ── */
     .gallery {
@@ -221,7 +219,6 @@
     <spline-viewer url="https://prod.spline.design/4WjEktaxmm-6tVQu/scene.splinecode"></spline-viewer>
   </div>
   <div class="bg-overlay"></div>
-  <div class="watermark-cover"></div>
 
 
   <!-- ── 로그인 오버레이 ── -->
