@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 페이지</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #08081a;
+      color: #e0e0f0;
+      min-height: 100vh;
+    }
+
+    /* ── 로그인 화면 ── */
+    #login-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .login-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      width: min(360px, 90vw);
+      text-align: center;
+      backdrop-filter: blur(16px);
+    }
+    .login-box h1 { font-size: 1.4rem; margin-bottom: 0.4rem; }
+    .login-box p  { font-size: 0.82rem; color: rgba(255,255,255,0.4); margin-bottom: 2rem; }
+
+    .field {
+      display: flex; flex-direction: column; gap: 0.4rem;
+      text-align: left; margin-bottom: 1rem;
+    }
+    .field label { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+    .field input {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; padding: 0.75rem 1rem;
+      color: #fff; font-size: 0.92rem;
+      font-family: 'Noto Sans KR', sans-serif;
+      outline: none; transition: border-color 0.2s;
+    }
+    .field input:focus { border-color: rgba(255,100,150,0.6); }
+
+    .login-err { font-size: 0.8rem; color: #ff6b8a; margin-bottom: 0.8rem; min-height: 1rem; }
+
+    .btn-login {
+      width: 100%; padding: 0.85rem;
+      background: linear-gradient(135deg, #ff6496, #c064ff);
+      border: none; border-radius: 12px;
+      color: #fff; font-size: 0.95rem; font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer; transition: all 0.25s;
+    }
+    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,100,150,0.4); }
+
+    /* ── 대시보드 ── */
+    #dashboard { display: none; }
+
+    header {
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 700; }
+    header .sub { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
+
+    .btn-sm {
+      padding: 0.45rem 1rem;
+      border-radius: 8px; border: none;
+      font-size: 0.8rem; font-weight: 600;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-logout { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.6); }
+    .btn-logout:hover { background: rgba(255,100,150,0.2); color: #fff; }
+    .btn-csv { background: linear-gradient(135deg, #ff6496, #c064ff); color: #fff; }
+    .btn-csv:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255,100,150,0.4); }
+
+    .main-area { padding: 2rem; max-width: 960px; margin: 0 auto; }
+
+    /* 통계 카드 */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px; padding: 1.2rem 1rem; text-align: center;
+    }
+    .stat-card .num { font-size: 2rem; font-weight: 900; color: #ff8ab4; }
+    .stat-card .lbl { font-size: 0.75rem; color: rgba(255,255,255,0.45); margin-top: 0.2rem; }
+
+    /* 테이블 */
+    .table-wrap {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; overflow: hidden;
+    }
+    .table-header {
+      padding: 1rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .table-header h2 { font-size: 0.95rem; font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 0.75rem 1.2rem; text-align: left;
+      font-size: 0.72rem; font-weight: 500;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    tbody tr { transition: background 0.15s; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody td {
+      padding: 0.85rem 1.2rem;
+      font-size: 0.88rem; color: rgba(255,255,255,0.8);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .ig-link {
+      color: #ff8ab4; text-decoration: none; font-weight: 500;
+    }
+    .ig-link:hover { text-decoration: underline; }
+
+    .loading { padding: 3rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+    .empty   { padding: 3rem; text-align: center; color: rgba(255,255,255,0.25); font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+  <!-- 로그인 화면 -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h1>🔐 관리자 로그인</h1>
+      <p>김위진 소개팅 페이지 관리자 전용</p>
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" id="admin-email" placeholder="admin@example.com" onkeydown="enterLogin(event)" />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" id="admin-pw" placeholder="••••••••" onkeydown="enterLogin(event)" />
+      </div>
+      <p class="login-err" id="login-err"></p>
+      <button class="btn-login" onclick="doLogin()">로그인</button>
+    </div>
+  </div>
+
+  <!-- 대시보드 -->
+  <div id="dashboard">
+    <header>
+      <div>
+        <h1>📊 소개팅 대시보드</h1>
+        <div class="sub" id="admin-email-display"></div>
+      </div>
+      <div style="display:flex;gap:0.6rem;">
+        <button class="btn-sm btn-csv" onclick="exportCSV()">CSV 내보내기</button>
+        <button class="btn-sm btn-logout" onclick="doLogout()">로그아웃</button>
+      </div>
+    </header>
+
+    <div class="main-area">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="num" id="stat-total">-</div>
+          <div class="lbl">총 지원자</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="stat-today">-</div>
+          <div class="lbl">오늘 지원</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <h2>지원자 목록</h2>
+          <button class="btn-sm btn-csv" onclick="loadSubmissions()" style="background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);">새로고침</button>
+        </div>
+        <div id="table-body">
+          <div class="loading">불러오는 중...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    let allData = [];
+
+    // ── 인증 상태 감지 ──
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('admin-email-display').textContent = user.email;
+        loadSubmissions();
+      } else {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('dashboard').style.display = 'none';
+      }
+    });
+
+    function enterLogin(e) {
+      if (e.key === 'Enter') doLogin();
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('admin-email').value.trim();
+      const pw    = document.getElementById('admin-pw').value;
+      const err   = document.getElementById('login-err');
+      err.textContent = '';
+      try {
+        await auth.signInWithEmailAndPassword(email, pw);
+      } catch (e) {
+        err.textContent = '이메일 또는 비밀번호가 올바르지 않아요.';
+      }
+    }
+
+    async function doLogout() {
+      await auth.signOut();
+    }
+
+    // ── 데이터 불러오기 ──
+    async function loadSubmissions() {
+      document.getElementById('table-body').innerHTML = '<div class="loading">불러오는 중...</div>';
+      try {
+        const snap = await db.collection('submissions').orderBy('timestamp', 'desc').get();
+        allData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderTable(allData);
+        updateStats(allData);
+      } catch (e) {
+        document.getElementById('table-body').innerHTML =
+          `<div class="empty">불러오기 실패: ${e.message}</div>`;
+      }
+    }
+
+    function fmtDate(ts) {
+      if (!ts) return '-';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }
+
+    function renderTable(data) {
+      if (data.length === 0) {
+        document.getElementById('table-body').innerHTML = '<div class="empty">아직 지원자가 없어요 🥲</div>';
+        return;
+      }
+      const rows = data.map((d, i) => `
+        <tr>
+          <td>${data.length - i}</td>
+          <td>
+            <a class="ig-link" href="https://www.instagram.com/${d.instagramId}/" target="_blank">
+              @${d.instagramId}
+            </a>
+          </td>
+          <td>${fmtDate(d.timestamp)}</td>
+        </tr>
+      `).join('');
+      document.getElementById('table-body').innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>인스타그램 ID</th>
+              <th>지원 시각</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function updateStats(data) {
+      document.getElementById('stat-total').textContent = data.length;
+      const today = new Date().toDateString();
+      const cnt = data.filter(d => {
+        if (!d.timestamp) return false;
+        return (d.timestamp.toDate ? d.timestamp.toDate() : new Date(d.timestamp)).toDateString() === today;
+      }).length;
+      document.getElementById('stat-today').textContent = cnt;
+    }
+
+    // ── CSV 내보내기 ──
+    function exportCSV() {
+      if (allData.length === 0) return alert('데이터가 없어요.');
+      const rows = [['순번', '인스타그램ID', '지원시각']];
+      allData.forEach((d, i) => {
+        rows.push([i + 1, d.instagramId, fmtDate(d.timestamp)]);
+      });
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+      a.download = `지원자목록_${new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','')}.csv`;
+      a.click();
+    }
+  </script>
+</body>
+</html>

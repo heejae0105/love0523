@@ -1,27 +1,26 @@
 /* ====================================================
-   script.js — Three.js 배경 파티클 + 3D 카드 틸트
+   script.js
+   - Three.js 배경 파티클
+   - 3D 카드 틸트
+   - Firebase 제출 & 모달 로직
    ==================================================== */
 
-// ── Three.js 배경 설정 ──────────────────────────────
+// ── Three.js 배경 ──────────────────────────────────────
 const canvas   = document.getElementById('bg-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 const scene  = new THREE.Scene();
+scene.background = new THREE.Color(0x080818);
+
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.z = 6;
 
-// 배경 그라디언트 색상 (어두운 네이비~퍼플)
-scene.background = new THREE.Color(0x080818);
-
-// ── 파티클 레이어 생성 헬퍼 ───────────────────────────
 function makeParticles(count, color, size, spread) {
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(count * 3);
-  for (let i = 0; i < count * 3; i++) {
-    pos[i] = (Math.random() - 0.5) * spread;
-  }
+  for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * spread;
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   const mat = new THREE.PointsMaterial({ color, size, transparent: true, opacity: 0.65, sizeAttenuation: true });
   return new THREE.Points(geo, mat);
@@ -32,124 +31,154 @@ const purpleDots = makeParticles(140, 0x9664ff, 0.035, 22);
 const whiteDots  = makeParticles(80,  0xffffff, 0.025, 18);
 scene.add(pinkDots, purpleDots, whiteDots);
 
-// ── 큰 빛나는 구체 (배경 분위기용) ────────────────────
-const glowGeo = new THREE.SphereGeometry(1.8, 32, 32);
-const glowMat = new THREE.MeshBasicMaterial({ color: 0xff6496, transparent: true, opacity: 0.04 });
-const glowBall = new THREE.Mesh(glowGeo, glowMat);
-glowBall.position.set(-3, 2, -4);
-scene.add(glowBall);
+const g1 = new THREE.SphereGeometry(1.8, 32, 32);
+const m1 = new THREE.MeshBasicMaterial({ color: 0xff6496, transparent: true, opacity: 0.04 });
+const b1 = new THREE.Mesh(g1, m1);
+b1.position.set(-3, 2, -4);
+scene.add(b1);
 
-const glowGeo2 = new THREE.SphereGeometry(2.2, 32, 32);
-const glowMat2 = new THREE.MeshBasicMaterial({ color: 0x9664ff, transparent: true, opacity: 0.04 });
-const glowBall2 = new THREE.Mesh(glowGeo2, glowMat2);
-glowBall2.position.set(3.5, -2, -5);
-scene.add(glowBall2);
+const g2 = new THREE.SphereGeometry(2.2, 32, 32);
+const m2 = new THREE.MeshBasicMaterial({ color: 0x9664ff, transparent: true, opacity: 0.04 });
+const b2 = new THREE.Mesh(g2, m2);
+b2.position.set(3.5, -2, -5);
+scene.add(b2);
 
-// ── 마우스 위치 추적 (배경 시차 효과) ─────────────────
 const mouse = { x: 0, y: 0 };
 window.addEventListener('mousemove', (e) => {
   mouse.x = (e.clientX / window.innerWidth  - 0.5) * 2;
   mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
 });
 
-// ── 애니메이션 루프 ────────────────────────────────────
-let time = 0;
+let bgTime = 0;
 function animateBg() {
   requestAnimationFrame(animateBg);
-  time += 0.004;
-
-  // 파티클 자체 회전
-  pinkDots.rotation.y   =  time * 0.18;
-  pinkDots.rotation.x   =  time * 0.08;
-  purpleDots.rotation.y = -time * 0.14;
-  purpleDots.rotation.z =  time * 0.06;
-  whiteDots.rotation.x  =  time * 0.10;
-
-  // 카메라 시차 (마우스 따라 살짝 이동)
+  bgTime += 0.004;
+  pinkDots.rotation.y    =  bgTime * 0.18;
+  pinkDots.rotation.x    =  bgTime * 0.08;
+  purpleDots.rotation.y  = -bgTime * 0.14;
+  purpleDots.rotation.z  =  bgTime * 0.06;
+  whiteDots.rotation.x   =  bgTime * 0.10;
   camera.position.x += (mouse.x * 0.4 - camera.position.x) * 0.03;
   camera.position.y += (-mouse.y * 0.3 - camera.position.y) * 0.03;
   camera.lookAt(scene.position);
-
-  // 글로우 구체 부유
-  glowBall.position.y  = 2 + Math.sin(time) * 0.3;
-  glowBall2.position.y = -2 + Math.cos(time * 0.8) * 0.4;
-
+  b1.position.y = 2 + Math.sin(bgTime) * 0.3;
+  b2.position.y = -2 + Math.cos(bgTime * 0.8) * 0.4;
   renderer.render(scene, camera);
 }
 animateBg();
 
-// ── 3D 카드 틸트 (마우스 기반) ─────────────────────────
+// ── 3D 카드 틸트 ───────────────────────────────────────
 const cardScene = document.getElementById('scene');
 const card      = document.getElementById('card');
 
-let currentRotX = 0;
-let currentRotY = 0;
-let targetRotX  = 0;
-let targetRotY  = 0;
-let isHovering  = false;
+let cx = 0, cy = 0, tx = 0, ty = 0, hovering = false;
 
 cardScene.addEventListener('mousemove', (e) => {
-  const rect    = card.getBoundingClientRect();
-  const centerX = rect.left + rect.width  / 2;
-  const centerY = rect.top  + rect.height / 2;
-
-  targetRotX = -(e.clientY - centerY) / 18;
-  targetRotY =  (e.clientX - centerX) / 18;
+  const r = card.getBoundingClientRect();
+  tx = -(e.clientY - (r.top  + r.height / 2)) / 18;
+  ty =  (e.clientX - (r.left + r.width  / 2)) / 18;
 });
+cardScene.addEventListener('mouseenter', () => hovering = true);
+cardScene.addEventListener('mouseleave', () => { hovering = false; tx = 0; ty = 0; });
 
-cardScene.addEventListener('mouseenter', () => { isHovering = true; });
-cardScene.addEventListener('mouseleave', () => {
-  isHovering = false;
-  targetRotX = 0;
-  targetRotY = 0;
-});
+cardScene.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const r = card.getBoundingClientRect();
+  tx = -(t.clientY - (r.top  + r.height / 2)) / 20;
+  ty =  (t.clientX - (r.left + r.width  / 2)) / 20;
+}, { passive: false });
+cardScene.addEventListener('touchend', () => { tx = 0; ty = 0; });
 
-// 부드러운 보간 애니메이션
 function animateCard() {
   requestAnimationFrame(animateCard);
-  const ease = isHovering ? 0.12 : 0.06;
-  currentRotX += (targetRotX - currentRotX) * ease;
-  currentRotY += (targetRotY - currentRotY) * ease;
-
-  if (Math.abs(currentRotX) > 0.01 || Math.abs(currentRotY) > 0.01) {
-    card.style.transform = `rotateX(${currentRotX}deg) rotateY(${currentRotY}deg)`;
+  const ease = hovering ? 0.12 : 0.06;
+  cx += (tx - cx) * ease;
+  cy += (ty - cy) * ease;
+  if (Math.abs(cx) > 0.01 || Math.abs(cy) > 0.01) {
+    card.style.transform = `rotateX(${cx}deg) rotateY(${cy}deg)`;
   }
 }
 animateCard();
 
-// ── 터치 디바이스 틸트 ─────────────────────────────────
-cardScene.addEventListener('touchmove', (e) => {
-  e.preventDefault();
-  const t      = e.touches[0];
-  const rect   = card.getBoundingClientRect();
-  const cx     = rect.left + rect.width  / 2;
-  const cy     = rect.top  + rect.height / 2;
-  targetRotX   = -(t.clientY - cy) / 20;
-  targetRotY   =  (t.clientX - cx) / 20;
-}, { passive: false });
-
-cardScene.addEventListener('touchend', () => {
-  targetRotX = 0;
-  targetRotY = 0;
-});
-
-// ── 창 크기 변경 대응 ──────────────────────────────────
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ── 지원하기 모달 ──────────────────────────────────────
+// ── 모달 유틸 ──────────────────────────────────────────
+let currentIgId = '';
+
+function showStep(n) {
+  ['step1','step2','step3'].forEach((id, i) => {
+    document.getElementById(id).style.display = (i + 1 === n) ? 'flex' : 'none';
+  });
+}
+
 function handleCTA() {
-  document.getElementById('modal').classList.add('active');
+  document.getElementById('ig-input').value = '';
+  document.getElementById('input-error').textContent = '';
+  showStep(1);
+  document.getElementById('modal-overlay').classList.add('active');
+  setTimeout(() => document.getElementById('ig-input').focus(), 300);
 }
 
 function closeModal() {
-  document.getElementById('modal').classList.remove('active');
+  document.getElementById('modal-overlay').classList.remove('active');
 }
 
-// 모달 배경 클릭시 닫기
-document.getElementById('modal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeModal();
-});
+function overlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ── Step 1: ID 입력 & Firebase 저장 ────────────────────
+async function submitStep1() {
+  const raw = document.getElementById('ig-input').value.trim().replace(/^@/, '');
+  const err = document.getElementById('input-error');
+
+  if (!raw) {
+    err.textContent = '아이디를 입력해주세요.';
+    return;
+  }
+  if (!/^[\w.]{1,30}$/.test(raw)) {
+    err.textContent = '올바른 인스타그램 아이디 형식이 아니에요.';
+    return;
+  }
+
+  err.textContent = '';
+  currentIgId = raw;
+
+  // Firebase에 저장
+  try {
+    await db.collection('submissions').add({
+      instagramId: raw,
+      timestamp:   firebase.firestore.FieldValue.serverTimestamp(),
+      userAgent:   navigator.userAgent,
+      referrer:    document.referrer || 'direct'
+    });
+  } catch (e) {
+    console.warn('Firebase 저장 실패 (설정 확인 필요):', e.message);
+    // 저장 실패해도 모달 진행은 계속
+  }
+
+  document.getElementById('step2-sub').textContent =
+    `@${raw}님, 팔로우 버튼을 눌러주세요 ☺️`;
+  showStep(2);
+}
+
+// ── Step 2: 인스타그램 팔로우 이동 ──────────────────────
+function followIG() {
+  const igUrl = 'https://www.instagram.com/nxptune0/';
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // 앱 딥링크 시도 후 웹으로 폴백
+    window.location.href = 'instagram://user?username=nxptune0';
+    setTimeout(() => window.open(igUrl, '_blank'), 1500);
+  } else {
+    window.open(igUrl, '_blank');
+  }
+
+  showStep(3);
+}
