@@ -7,7 +7,7 @@ const PROFILES = [
   {
     id: 'kimwijin',
     name: '김위진',
-    school: '대전 대신고등학교',
+    school: '대신고등학교',
     description: '평범하고 따뜻한 사람 🤍',
     instagram: 'nxptune0',
     photo: 'images/profile.png',
@@ -17,7 +17,7 @@ const PROFILES = [
   {
     id: 'youngwoong',
     name: '조영웅',
-    school: '대전대성고등학교',
+    school: '대성고등학교',
     description: '181 73 20 💪',
     instagram: 'h._r1o',
     photo: 'images/youngwoong.png',
