@@ -200,21 +200,42 @@
   <script>
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    // 리다이렉트 결과 처리 (로그인 후 돌아왔을 때)
-    auth.getRedirectResult().catch(e => {
-      console.error('redirect error:', e);
-    });
+    const GOOGLE_BTN_HTML = document.getElementById('google-login-btn').innerHTML;
+    const errEl = document.createElement('p');
+    errEl.style.cssText = 'font-size:.78rem;color:#ff6b8a;margin-top:.8rem;min-height:1rem;';
+    document.querySelector('.login-card').appendChild(errEl);
 
-    function signInWithGoogle() {
+    // 리다이렉트로 돌아왔을 때 결과 처리
+    auth.getRedirectResult()
+      .then(result => { if (result && result.user) errEl.textContent = ''; })
+      .catch(e => { errEl.textContent = '로그인 실패: ' + (e.message || '다시 시도해주세요'); });
+
+    async function signInWithGoogle() {
       const btn = document.getElementById('google-login-btn');
       btn.disabled = true;
-      btn.textContent = '이동 중...';
-      // 팝업 대신 리다이렉트 방식 — 모든 브라우저/폰에서 작동
-      auth.signInWithRedirect(provider).catch(e => {
-        btn.disabled = false;
-        btn.textContent = '다시 시도해주세요';
-        console.error(e);
-      });
+      btn.textContent = '로그인 중...';
+      errEl.textContent = '';
+
+      try {
+        // 팝업 방식 먼저 시도 (빠름)
+        await auth.signInWithPopup(provider);
+      } catch (e) {
+        if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+          // 팝업 차단 → 리다이렉트로 자동 전환
+          errEl.textContent = '잠시 후 Google 로그인 페이지로 이동해요...';
+          try {
+            await auth.signInWithRedirect(provider);
+          } catch (e2) {
+            errEl.textContent = '오류: ' + (e2.message || '다시 시도해주세요');
+            btn.disabled = false;
+            btn.innerHTML = GOOGLE_BTN_HTML;
+          }
+        } else {
+          errEl.textContent = '오류: ' + (e.message || '다시 시도해주세요');
+          btn.disabled = false;
+          btn.innerHTML = GOOGLE_BTN_HTML;
+        }
+      }
     }
 
     function signOut() {
