@@ -16,21 +16,23 @@
     }
     spline-viewer { width: 100%; height: 100%; }
 
-    /* Spline 워터마크 숨김 */
-    .spline-bg::after {
-      content: ''; position: absolute; bottom: 0; right: 0;
-      width: 160px; height: 48px; background: #0a0010; z-index: 1;
-    }
-
-    /* 가독성을 위한 어두운 오버레이 */
+    /* 가독성을 위한 핑크빛 오버레이 */
     .bg-overlay {
       position: fixed; inset: 0; z-index: 1; pointer-events: none;
       background: linear-gradient(
-        135deg,
-        rgba(8,0,20,0.62) 0%,
-        rgba(20,0,40,0.5) 50%,
-        rgba(8,0,20,0.65) 100%
+        160deg,
+        rgba(80,0,60,0.28) 0%,
+        rgba(160,40,120,0.15) 40%,
+        rgba(80,20,100,0.22) 100%
       );
+    }
+
+    /* Spline 워터마크 덮기 */
+    .watermark-cover {
+      position: fixed; bottom: 0; right: 0;
+      width: 200px; height: 55px; z-index: 10;
+      pointer-events: none;
+      background: linear-gradient(135deg, transparent 0%, rgba(210,130,170,1) 55%);
     }
 
     /* ── 로그인 오버레이 ── */
@@ -44,8 +46,8 @@
 
     .login-card {
       position: relative;
-      background: rgba(15,5,30,0.55);
-      border: 1px solid rgba(255,100,200,0.18);
+      background: rgba(60,10,50,0.45);
+      border: 1px solid rgba(255,150,200,0.3);
       border-radius: 28px;
       padding: 3rem 2.5rem;
       width: min(380px, 90vw);
@@ -100,7 +102,7 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.2rem 2rem;
       border-bottom: 1px solid rgba(255,255,255,0.06);
-      background: rgba(10,0,20,0.4);
+      background: rgba(60,10,50,0.35);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
     }
@@ -134,10 +136,10 @@
       padding: 0 1.5rem 4rem;
     }
     .profile-card {
-      background: rgba(15,5,30,0.45);
+      background: rgba(60,10,50,0.38);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,100,200,0.15);
+      border: 1px solid rgba(255,150,200,0.25);
       border-radius: 20px; padding: 1.5rem 1rem;
       text-align: center; cursor: pointer;
       text-decoration: none; color: inherit; display: block;
@@ -219,6 +221,7 @@
     <spline-viewer url="https://prod.spline.design/4WjEktaxmm-6tVQu/scene.splinecode"></spline-viewer>
   </div>
   <div class="bg-overlay"></div>
+  <div class="watermark-cover"></div>
 
 
   <!-- ── 로그인 오버레이 ── -->
