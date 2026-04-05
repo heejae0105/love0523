@@ -342,24 +342,27 @@
       }
     });
 
-    // 좋아요 상태 (localStorage)
-    const likedKey = id => `liked_${id}`;
-    const isLiked  = id => !!localStorage.getItem(likedKey(id));
-
     async function buildGallery() {
       const gallery = document.getElementById('gallery');
       if (gallery.children.length > 0) return;
 
-      // Firestore에서 좋아요 수 불러오기
+      const uid = _auth.currentUser.uid;
+
+      // 좋아요 수 + 현재 유저 좋아요 여부 병렬 로드
+      const [likeSnap, userLikeSnap] = await Promise.all([
+        _db.collection('likes').get(),
+        _db.collection('userLikes').where('uid', '==', uid).get()
+      ]);
+
       const likeCounts = {};
-      try {
-        const snap = await _db.collection('likes').get();
-        snap.forEach(doc => { likeCounts[doc.id] = doc.data().count || 0; });
-      } catch(e) { /* 실패해도 0으로 표시 */ }
+      likeSnap.forEach(doc => { likeCounts[doc.id] = doc.data().count || 0; });
+
+      const userLiked = new Set();
+      userLikeSnap.forEach(doc => { userLiked.add(doc.data().profileId); });
 
       PROFILES.forEach(p => {
         const count = likeCounts[p.id] || 0;
-        const liked = isLiked(p.id);
+        const liked = userLiked.has(p.id);
 
         const a = document.createElement('a');
         a.className = 'profile-card';
@@ -373,7 +376,7 @@
           <div class="card-school">${p.school}</div>
           <div class="card-desc">${p.description}</div>
           <div class="card-btn">프로필 보기 →</div>
-          <button class="heart-btn${liked ? ' liked' : ''}" data-id="${p.id}">
+          <button class="heart-btn${liked ? ' liked' : ''}" data-id="${p.id}" data-liked="${liked}">
             <span class="heart-icon">${liked ? '❤️' : '🤍'}</span>
             <span class="heart-count">${count}</span>
           </button>
@@ -385,29 +388,50 @@
       gallery.querySelectorAll('.heart-btn').forEach(btn => {
         btn.addEventListener('click', async e => {
           e.preventDefault(); e.stopPropagation();
-          const id = btn.dataset.id;
-          const liked = isLiked(id);
+          if (btn.disabled) return;
+          btn.disabled = true;
+
+          const profileId = btn.dataset.id;
+          const liked = btn.dataset.liked === 'true';
           const countEl = btn.querySelector('.heart-count');
           const iconEl  = btn.querySelector('.heart-icon');
-          const delta = liked ? -1 : 1;
-          const newCount = Math.max(0, (parseInt(countEl.textContent) || 0) + delta);
+          const userLikeRef = _db.collection('userLikes').doc(`${uid}_${profileId}`);
+          const likeRef = _db.collection('likes').doc(profileId);
+          const increment = firebase.firestore.FieldValue.increment;
 
-          if (liked) {
-            localStorage.removeItem(likedKey(id));
-            btn.classList.remove('liked');
-            iconEl.textContent = '🤍';
-          } else {
-            localStorage.setItem(likedKey(id), '1');
-            btn.classList.add('liked');
-            iconEl.textContent = '❤️';
+          // UI 즉시 반영
+          const newLiked = !liked;
+          btn.dataset.liked = newLiked;
+          btn.classList.toggle('liked', newLiked);
+          iconEl.textContent = newLiked ? '❤️' : '🤍';
+          countEl.textContent = Math.max(0, parseInt(countEl.textContent || 0) + (newLiked ? 1 : -1));
+          if (newLiked) {
             btn.classList.add('pop');
             setTimeout(() => btn.classList.remove('pop'), 400);
           }
-          countEl.textContent = newCount;
 
+          // Firestore 원자적 업데이트
           try {
-            await _db.collection('likes').doc(id).set({ count: newCount }, { merge: true });
-          } catch(e) { /* 저장 실패 무시 */ }
+            if (newLiked) {
+              await Promise.all([
+                userLikeRef.set({ uid, profileId }),
+                likeRef.set({ count: increment(1) }, { merge: true })
+              ]);
+            } else {
+              await Promise.all([
+                userLikeRef.delete(),
+                likeRef.set({ count: increment(-1) }, { merge: true })
+              ]);
+            }
+          } catch(err) {
+            // 실패 시 UI 롤백
+            btn.dataset.liked = liked;
+            btn.classList.toggle('liked', liked);
+            iconEl.textContent = liked ? '❤️' : '🤍';
+            countEl.textContent = Math.max(0, parseInt(countEl.textContent || 0) + (liked ? 1 : -1));
+          }
+
+          btn.disabled = false;
         });
       });
     }
