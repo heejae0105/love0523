@@ -11,7 +11,7 @@ const PROFILES = [
     description: '평범하고 따뜻한 사람 🤍',
     instagram: 'nxptune0',
     photo: 'images/profile.png',
-    photoPosition: 'center 15%',
+    photoPosition: 'center 50%',
     idealType: ['여성 ♀', '160cm 이하', '55kg 이하'],
     status: '모집중'
   },
