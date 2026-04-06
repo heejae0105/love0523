@@ -225,12 +225,11 @@
     let allData = [];
     let chatMsgUnsub = null;
 
-    // ── 인증 ──────────────────────────────────────────────
-    // 익명 로그인 후 데이터 불러오기
-    auth.onAuthStateChanged(user => {
-      if (user) { loadAll(); }
-    });
-    auth.signInAnonymously().catch(() => loadAll()); // 익명 로그인 실패해도 시도
+    // ── 인증 후 데이터 로드 ────────────────────────────────
+    (async () => {
+      try { await auth.signInAnonymously(); } catch(e) {}
+      loadAll();
+    })();
 
     // ── 전체 로드 ─────────────────────────────────────────
     async function loadAll() {
