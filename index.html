@@ -361,7 +361,7 @@
       } catch(e) { /* 실패해도 프로필은 0/미좋아요 상태로 표시 */ }
 
       PROFILES.forEach(p => {
-        const count = likeCounts[p.id] || 0;
+        const count = Math.max(0, likeCounts[p.id] || 0);
         const liked = userLiked.has(p.id);
 
         const a = document.createElement('a');
