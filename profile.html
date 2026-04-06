@@ -7,6 +7,75 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── 채팅 패널 ── */
+    .chat-panel {
+      position: fixed; inset: 0; z-index: 300;
+      background: #0a0010;
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    .chat-panel.open { transform: translateX(0); }
+    .chat-header {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 1rem 1.2rem;
+      background: rgba(60,10,50,0.6);
+      border-bottom: 1px solid rgba(255,150,200,0.2);
+      backdrop-filter: blur(12px);
+    }
+    .chat-back-btn {
+      background: none; border: none; color: #ff8ab4;
+      font-size: 1.3rem; cursor: pointer; padding: 0.2rem 0.4rem;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .chat-profile-img {
+      width: 36px; height: 36px; border-radius: 50%;
+      object-fit: cover; border: 2px solid rgba(255,100,150,0.4);
+    }
+    .chat-profile-name { font-weight: 700; font-size: 1rem; }
+    .chat-messages-wrap {
+      flex: 1; overflow-y: auto; padding: 1rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .chat-msg {
+      max-width: 72%; padding: 0.6rem 0.95rem;
+      border-radius: 18px; font-size: 0.9rem; line-height: 1.45;
+      word-break: break-word;
+    }
+    .chat-msg.mine {
+      background: linear-gradient(135deg, #ff6496, #c064ff);
+      color: #fff; align-self: flex-end; border-bottom-right-radius: 4px;
+    }
+    .chat-msg.theirs {
+      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9);
+      align-self: flex-start; border-bottom-left-radius: 4px;
+    }
+    .chat-empty {
+      text-align: center; color: rgba(255,255,255,0.3);
+      font-size: 0.85rem; margin: auto; padding: 2rem;
+    }
+    .chat-input-row {
+      display: flex; gap: 0.5rem; padding: 0.8rem;
+      border-top: 1px solid rgba(255,150,200,0.15);
+      background: rgba(60,10,50,0.5);
+    }
+    .chat-input-row input {
+      flex: 1; background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,150,200,0.2);
+      border-radius: 999px; padding: 0.65rem 1rem;
+      color: #fff; font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.9rem; outline: none;
+    }
+    .chat-input-row input:focus { border-color: rgba(255,100,150,0.5); }
+    .chat-input-row button {
+      background: linear-gradient(135deg, #ff6496, #c064ff);
+      border: none; border-radius: 999px;
+      padding: 0.65rem 1.2rem; color: #fff;
+      font-weight: 600; cursor: pointer;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+  </style>
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>
@@ -45,40 +114,34 @@
     </div>
   </main>
 
-  <!-- 모달 -->
+  <!-- 연락하기 모달 -->
   <div class="modal-overlay" id="modal-overlay">
-    <div class="modal" id="step1">
-      <button class="modal-close" id="close1">✕</button>
+    <div class="modal" id="contact-modal">
+      <button class="modal-close" id="modal-close-btn">✕</button>
       <div class="modal-emoji">💌</div>
       <h2>연락하기</h2>
-      <p class="modal-sub">인스타그램 아이디를 입력해주세요</p>
-      <div class="input-wrap">
-        <span class="input-at">@</span>
-        <input id="ig-input" type="text" placeholder="instagram_id" autocomplete="off" autocapitalize="none" />
-      </div>
-      <p class="input-error" id="input-error"></p>
-      <button class="modal-btn primary" id="btn-next">다음 →</button>
-    </div>
-
-    <div class="modal" id="step2" style="display:none;">
-      <button class="modal-close" id="close2">✕</button>
-      <div class="modal-emoji">🎉</div>
-      <h2>거의 다 왔어요!</h2>
-      <p class="modal-sub" id="step2-sub">팔로우 버튼을 눌러주세요 ☺️</p>
+      <p class="modal-sub">팔로우하고 메시지를 보내봐요 ☺️</p>
       <a id="ig-follow-link" class="modal-btn ig-btn" href="#" target="_blank" rel="noopener">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="white" style="margin-right:8px;flex-shrink:0;">
           <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
         </svg>
-        <span id="ig-handle-text">팔로우하기</span>
+        팔로우하기
       </a>
-      <button class="modal-btn ghost" id="btn-later">나중에</button>
+      <button class="modal-btn primary" id="btn-message">💬 메시지 보내기</button>
     </div>
+  </div>
 
-    <div class="modal" id="step3" style="display:none;">
-      <div class="modal-emoji">💕</div>
-      <h2>완료!</h2>
-      <p class="modal-sub">팔로우 감사해요!<br/>확인 후 연락드릴게요 😊</p>
-      <button class="modal-btn primary" id="btn-done">닫기</button>
+  <!-- 채팅 패널 -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <button class="chat-back-btn" id="chat-back-btn">←</button>
+      <img class="chat-profile-img" id="chat-profile-img" src="" alt="" />
+      <span class="chat-profile-name" id="chat-profile-name"></span>
+    </div>
+    <div class="chat-messages-wrap" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="메시지를 입력하세요..." autocomplete="off" />
+      <button id="chat-send-btn">전송</button>
     </div>
   </div>
 
@@ -107,13 +170,14 @@
   if (!profile) { location.href = 'index.html'; }
 
   document.title = profile.name + ' | 소개팅 💘';
-  document.getElementById('profile-photo').src  = profile.photo;
-  document.getElementById('profile-photo').alt  = profile.name;
-  document.getElementById('profile-name').textContent   = profile.name;
-  document.getElementById('profile-school').textContent = profile.school;
-  document.getElementById('profile-desc').textContent   = profile.description;
-  document.getElementById('ig-handle-text').textContent = '@' + profile.instagram + ' 팔로우하기';
-  document.getElementById('ig-follow-link').href        = 'https://www.instagram.com/' + profile.instagram + '/';
+  document.getElementById('profile-photo').src           = profile.photo;
+  document.getElementById('profile-photo').alt           = profile.name;
+  document.getElementById('profile-name').textContent    = profile.name;
+  document.getElementById('profile-school').textContent  = profile.school;
+  document.getElementById('profile-desc').textContent    = profile.description;
+  document.getElementById('ig-follow-link').href         = 'https://www.instagram.com/' + profile.instagram + '/';
+  document.getElementById('chat-profile-img').src        = profile.photo;
+  document.getElementById('chat-profile-name').textContent = profile.name;
 
   const chipsEl = document.getElementById('profile-chips');
   profile.idealType.forEach(t => {
@@ -122,52 +186,121 @@
     chipsEl.appendChild(d);
   });
 
-  // ── 모달 ────────────────────────────────────────────
-  const overlay = document.getElementById('modal-overlay');
-
-  function showStep(n) {
-    ['step1','step2','step3'].forEach((id, i) => {
-      document.getElementById(id).style.display = (i+1===n) ? 'flex' : 'none';
-    });
+  // 채팅 없는 프로필은 버튼 숨기기
+  if (!profile.ownerEmail) {
+    document.getElementById('btn-message').style.display = 'none';
   }
-  function openModal()  { showStep(1); overlay.classList.add('active'); setTimeout(()=>document.getElementById('ig-input').focus(),300); }
-  function closeModal() { overlay.classList.remove('active'); }
 
-  document.getElementById('cta-btn').addEventListener('click', openModal);
-  document.getElementById('close1').addEventListener('click', closeModal);
-  document.getElementById('close2').addEventListener('click', closeModal);
-  document.getElementById('btn-later').addEventListener('click', closeModal);
-  document.getElementById('btn-done').addEventListener('click', closeModal);
-  overlay.addEventListener('click', e => { if(e.target===overlay) closeModal(); });
+  // ── 연락하기 모달 ────────────────────────────────────
+  const overlay = document.getElementById('modal-overlay');
+  document.getElementById('cta-btn').addEventListener('click', () => overlay.classList.add('active'));
+  document.getElementById('modal-close-btn').addEventListener('click', () => overlay.classList.remove('active'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+  document.getElementById('btn-message').addEventListener('click', () => {
+    overlay.classList.remove('active');
+    openChat();
+  });
 
-  document.getElementById('ig-input').addEventListener('keydown', e => { if(e.key==='Enter') submitStep1(); });
-  document.getElementById('btn-next').addEventListener('click', submitStep1);
+  // ── 채팅 ────────────────────────────────────────────
+  let chatUnsub = null;
+  let currentChatId = null;
 
-  document.getElementById('ig-follow-link').addEventListener('click', () => setTimeout(()=>showStep(3), 300));
+  async function openChat() {
+    if (!currentUser) return;
+    if (!profile.ownerEmail) { alert('이 프로필은 아직 채팅을 지원하지 않아요 😅'); return; }
 
-  async function submitStep1() {
-    const raw = document.getElementById('ig-input').value.trim().replace(/^@/,'');
-    const err = document.getElementById('input-error');
-    if (!raw)                         { err.textContent='아이디를 입력해주세요.'; return; }
-    if (!/^[\w.]{1,30}$/.test(raw))   { err.textContent='올바른 인스타그램 아이디 형식이 아니에요.'; return; }
-    err.textContent = '';
+    let ownerUid;
+    try {
+      const ownerDoc = await db.collection('profileOwners').doc(profile.id).get();
+      if (!ownerDoc.exists) {
+        alert('상대방이 아직 준비중이에요 😅\n잠시 후 다시 시도해봐요!');
+        return;
+      }
+      ownerUid = ownerDoc.data().uid;
+    } catch(e) {
+      alert('채팅을 시작할 수 없어요. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    if (currentUser.uid === ownerUid) {
+      alert('자신의 프로필이에요 😅\n메시지함은 홈 화면에서 확인하세요!');
+      return;
+    }
+
+    currentChatId = `${profile.id}_${currentUser.uid}`;
+    const chatRef = db.collection('chats').doc(currentChatId);
 
     try {
-      await db.collection('submissions').add({
-        profileId:    profile.id,
-        profileName:  profile.name,
-        instagramId:  raw,
-        googleEmail:  currentUser?.email  || '',
-        googleName:   currentUser?.displayName || '',
-        googlePhoto:  currentUser?.photoURL || '',
-        timestamp:    firebase.firestore.FieldValue.serverTimestamp(),
-        userAgent:    navigator.userAgent
-      });
-    } catch(e) { console.warn('Firebase 저장 실패:', e.message); }
+      const chatDoc = await chatRef.get();
+      if (!chatDoc.exists) {
+        await chatRef.set({
+          profileId:    profile.id,
+          profileName:  profile.name,
+          visitorUid:   currentUser.uid,
+          visitorName:  currentUser.displayName || currentUser.email,
+          visitorPhoto: currentUser.photoURL || '',
+          ownerUid:     ownerUid,
+          participants: [currentUser.uid, ownerUid],
+          lastMessage:  '',
+          lastAt:       firebase.firestore.FieldValue.serverTimestamp(),
+          unreadByOwner: 0
+        });
+      }
+    } catch(e) { alert('채팅을 시작할 수 없어요.'); return; }
 
-    document.getElementById('step2-sub').textContent = '@'+raw+'님, 팔로우 버튼을 눌러주세요 ☺️';
-    showStep(2);
+    document.getElementById('chat-panel').classList.add('open');
+
+    if (chatUnsub) chatUnsub();
+    chatUnsub = db.collection('chats').doc(currentChatId)
+      .collection('messages')
+      .orderBy('createdAt', 'asc')
+      .onSnapshot(snap => {
+        const container = document.getElementById('chat-messages');
+        if (snap.empty) {
+          container.innerHTML = '<p class="chat-empty">첫 메시지를 보내봐요 💌</p>';
+          return;
+        }
+        container.innerHTML = '';
+        snap.forEach(doc => {
+          const msg = doc.data();
+          const div = document.createElement('div');
+          div.className = 'chat-msg ' + (msg.senderUid === currentUser.uid ? 'mine' : 'theirs');
+          div.textContent = msg.text;
+          container.appendChild(div);
+        });
+        container.scrollTop = container.scrollHeight;
+      });
+
+    setTimeout(() => document.getElementById('chat-input').focus(), 300);
   }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text  = input.value.trim();
+    if (!text || !currentChatId || !currentUser) return;
+    input.value = '';
+
+    try {
+      await db.collection('chats').doc(currentChatId).collection('messages').add({
+        text,
+        senderUid:  currentUser.uid,
+        senderName: currentUser.displayName || currentUser.email,
+        createdAt:  firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await db.collection('chats').doc(currentChatId).update({
+        lastMessage:  text,
+        lastAt:       firebase.firestore.FieldValue.serverTimestamp(),
+        unreadByOwner: firebase.firestore.FieldValue.increment(1)
+      });
+    } catch(e) { console.error('메시지 전송 실패:', e); }
+  }
+
+  document.getElementById('chat-back-btn').addEventListener('click', () => {
+    document.getElementById('chat-panel').classList.remove('open');
+    if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  });
+  document.getElementById('chat-send-btn').addEventListener('click', sendMessage);
+  document.getElementById('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
 
   // ── Three.js 배경 ────────────────────────────────────
   const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha:true, antialias:true });

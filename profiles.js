@@ -12,6 +12,7 @@ const PROFILES = [
     instagram: 'nxptune0',
     photo: 'images/profile.png',
     photoPosition: 'center 50%',
+    ownerEmail: '25_kwj1001@dshs.kr',
     idealType: ['여성 ♀', '160cm 이하', '55kg 이하'],
     status: '모집중'
   },
@@ -32,6 +33,7 @@ const PROFILES = [
     description: '170 40 20',
     instagram: 'rlayewns_',
     photo: 'images/스크린샷_2026-04-06_142044-removebg-preview.png',
+    ownerEmail: '25_kyj1106@dshs.kr',
     idealType: ['꼴리는 섹시한여자'],
     status: '모집중'
   }
