@@ -13,5 +13,15 @@ const PROFILES = [
     photo: 'images/profile.png',
     idealType: ['여성 ♀', '160cm 이하', '55kg 이하'],
     status: '모집중'
+  },
+  {
+    id: 'eomounji',
+    name: '엄운지',
+    school: '대신고등학교',
+    description: '이쁘고 몸매좋은여자',
+    instagram: 'hyxn_six',
+    photo: 'images/스크린샷_2026-04-06_141416-removebg-preview.png',
+    idealType: ['160cm 이하', '50kg 미만', 'B컵 이상'],
+    status: '모집중'
   }
 ];
