@@ -23,5 +23,15 @@ const PROFILES = [
     photo: 'images/스크린샷_2026-04-06_141416-removebg-preview.png',
     idealType: ['160cm 이하', '50kg 미만', 'B컵 이상'],
     status: '모집중'
+  },
+  {
+    id: 'kimyejun',
+    name: '김예준',
+    school: '대신고등학교',
+    description: '170 40 20',
+    instagram: 'rlayewns_',
+    photo: 'images/스크린샷_2026-04-06_142044-removebg-preview.png',
+    idealType: ['꼴리는 섹시한여자'],
+    status: '모집중'
   }
 ];
