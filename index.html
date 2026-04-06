@@ -630,7 +630,7 @@
           try {
             if (newLiked) {
               await Promise.all([
-                userLikeRef.set({ uid, profileId }),
+                userLikeRef.set({ uid, profileId, visitorName: _auth.currentUser.displayName || _auth.currentUser.email, visitorPhoto: _auth.currentUser.photoURL || '' }),
                 likeRef.set({ count: increment(1) }, { merge: true })
               ]);
             } else {

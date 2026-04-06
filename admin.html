@@ -303,19 +303,41 @@
     // ── 좋아요 ────────────────────────────────────────────
     async function loadLikes() {
       try {
-        const snap = await db.collection('likes').get();
+        const [likeSnap, userLikeSnap] = await Promise.all([
+          db.collection('likes').get(),
+          db.collection('userLikes').get()
+        ]);
         const counts = {};
-        snap.forEach(d => { counts[d.id] = d.data().count || 0; });
+        likeSnap.forEach(d => { counts[d.id] = d.data().count || 0; });
+
+        // profileId별 좋아요 누른 사람 목록
+        const likedBy = {}; // profileId -> [{visitorName, visitorPhoto, uid}]
+        userLikeSnap.forEach(d => {
+          const data = d.data();
+          if (!likedBy[data.profileId]) likedBy[data.profileId] = [];
+          likedBy[data.profileId].push(data);
+        });
+
         const grid = document.getElementById('likes-grid');
         grid.innerHTML = '';
         PROFILES.forEach(p => {
+          const users = likedBy[p.id] || [];
+          const avatars = users.map(u =>
+            u.visitorPhoto
+              ? `<img src="${u.visitorPhoto}" title="${u.visitorName||u.uid}" style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,100,150,0.4);margin:-4px;" onerror="this.style.display='none'" />`
+              : `<span style="width:28px;height:28px;border-radius:50%;background:rgba(255,100,150,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;margin:-4px;">👤</span>`
+          ).join('');
           const div = document.createElement('div');
           div.className = 'like-card';
           div.innerHTML = `
             <img src="${p.photo}" onerror="this.style.display='none'" />
             <div class="lc-name">${p.name}</div>
             <div class="lc-count">${counts[p.id] || 0}</div>
-            <div class="lc-label">좋아요</div>`;
+            <div class="lc-label">좋아요</div>
+            ${users.length > 0 ? `
+              <div style="margin-top:0.7rem;display:flex;flex-wrap:wrap;justify-content:center;gap:2px;padding:0 0.3rem;">${avatars}</div>
+              <div style="margin-top:0.5rem;font-size:0.72rem;color:rgba(255,255,255,0.3);">${users.map(u=>u.visitorName||'익명').join(', ')}</div>
+            ` : '<div style="margin-top:0.5rem;font-size:0.72rem;color:rgba(255,255,255,0.2);">아직 없음</div>'}`;
           grid.appendChild(div);
         });
       } catch(e) {
