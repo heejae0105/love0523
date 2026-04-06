@@ -369,7 +369,7 @@
         a.href = `profile.html?id=${p.id}`;
         a.innerHTML = `
           <div class="card-photo-wrap">
-            <img class="card-photo" src="${p.photo}" alt="${p.name}" />
+            <img class="card-photo" src="${p.photo}" alt="${p.name}" style="${p.photoPosition ? `object-position:${p.photoPosition}` : ''}" />
             <div class="card-online"></div>
           </div>
           <div class="card-name">${p.name}</div>
