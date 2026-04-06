@@ -226,8 +226,11 @@
     let chatMsgUnsub = null;
 
     // ── 인증 ──────────────────────────────────────────────
-    // 페이지 로드 시 바로 데이터 불러오기
-    window.addEventListener('load', loadAll);
+    // 익명 로그인 후 데이터 불러오기
+    auth.onAuthStateChanged(user => {
+      if (user) { loadAll(); }
+    });
+    auth.signInAnonymously().catch(() => loadAll()); // 익명 로그인 실패해도 시도
 
     // ── 전체 로드 ─────────────────────────────────────────
     async function loadAll() {
